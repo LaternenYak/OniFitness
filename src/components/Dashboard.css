@@ -1,0 +1,181 @@
+/* Dashboard.css */
+
+/* Grundlayout */
+body {
+  background: linear-gradient(135deg, #0f0f0f, #1a1a2e);
+  color: #e0e0e0;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  padding: 2rem;
+  margin: 0;
+}
+
+/* Überschrift */
+h2 {
+  font-size: 2rem;
+  color: #00ffe0;
+  margin-bottom: 2rem;
+  text-shadow: 0 0 5px #00ffe0;
+}
+
+/* Gewichtsanzeige */
+.weights-container {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+}
+
+
+
+.weight-boxes {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  margin-bottom: 2rem;
+  gap: 1rem;
+}
+
+.weight-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.weight-grid {
+  display: flex;
+  justify-content: center;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.weight-box {
+  background: #111827;
+  border: 1px solid #0ff1ce;
+  border-radius: 1rem;
+  padding: 1rem 1.5rem;
+  min-width: 160px;
+  text-align: center;
+  box-shadow: 0 0 8px #0ff1ce44;
+}
+
+.weight-box .edit-icon {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  cursor: pointer;
+  color: #00ffe0;
+  font-size: 1.2rem;
+  transition: transform 0.2s;
+}
+
+.weight-box .edit-icon:hover {
+  transform: scale(1.2);
+}
+
+.weight-box input {
+  background: transparent;
+  border: none;
+  color: #fff;
+  font-size: 1.2rem;
+  text-align: center;
+  width: 100%;
+}
+
+.weight-diff {
+  display: flex;
+  justify-content: center;
+  gap: 2rem;
+  margin-top: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.diff-box {
+  background: #0d1b2a;
+  color: #f0f0f0;
+  padding: 0.8rem 1.2rem;
+  border-radius: 0.8rem;
+  font-size: 0.95rem;
+  box-shadow: 0 0 6px #0ff1ce22;
+}
+
+
+/* Workout-Bereich */
+.workout-section {
+  background: #1c1c2c;
+  border: 1px solid #444;
+  border-radius: 1rem;
+  padding: 1.5rem;
+  box-shadow: 0 0 15px rgba(0, 255, 224, 0.2);
+}
+
+.workout-section h3 {
+  color: #00ffe0;
+  text-shadow: 0 0 4px #00ffe0;
+  margin-bottom: 1rem;
+}
+
+.workout-item {
+  display: flex;
+  align-items: center;
+  margin-bottom: 0.8rem;
+}
+
+.workout-item input[type="checkbox"] {
+  margin-right: 0.8rem;
+  transform: scale(1.2);
+}
+
+.workout-item input[type="text"] {
+  background: #29293d;
+  border: 1px solid #00ffe0;
+  border-radius: 5px;
+  padding: 0.5rem;
+  color: #fff;
+  width: 100%;
+}
+
+/* Buttons */
+button {
+  background-color: #00ffe0;
+  border: none;
+  color: #000;
+  padding: 0.7rem 1.5rem;
+  border-radius: 8px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background 0.3s;
+  box-shadow: 0 0 10px #00ffe0;
+}
+
+button:hover {
+  background-color: #00ccbb;
+}
+
+/* Nachricht */
+p {
+  margin-top: 1rem;
+  color: #aaffaa;
+}
+
+/* Mobiloptimierung */
+@media (max-width: 600px) {
+  .weight-boxes {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .weight-box {
+    min-width: 100%;
+  }
+
+  .workout-section {
+    padding: 1rem;
+  }
+
+  button {
+    width: 100%;
+    margin-top: 1rem;
+  }
+}
