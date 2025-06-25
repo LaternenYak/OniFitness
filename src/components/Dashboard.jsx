@@ -13,47 +13,63 @@ export default function Dashboard() {
   const [editMode, setEditMode] = useState(false);
   const [weeklyWorkouts, setWeeklyWorkouts] = useState({});
 
-  const currentDay = new Date().toLocaleDateString("de-DE", { weekday: "long" });
+  const currentDay = new Date().toLocaleDateString("de-DE", {
+    weekday: "long",
+  });
   const todayWorkout = weeklyWorkouts[currentDay] || [];
 
+  // ---------- Zentrale fetchData Funktion ----------
+  const fetchData = async () => {
+    const {
+      data: { user },
+      error,
+    } = await supabase.auth.getUser();
+
+    if (!user || error) return;
+
+    const { data: weightData } = await supabase
+      .from("weights")
+      .select("*")
+      .eq("user_id", user.id)
+      .single();
+
+    if (weightData) {
+      setStartWeight(weightData.start);
+      setCurrentWeight(weightData.current);
+      setGoalWeight(weightData.goal);
+    }
+
+    const { data: workoutsData } = await supabase
+      .from("workouts")
+      .select("day, text, done")
+      .eq("user_id", user.id);
+
+    if (workoutsData) {
+      const grouped = workoutsData.reduce((acc, item) => {
+        acc[item.day] = acc[item.day] || [];
+        acc[item.day].push({ text: item.text, done: item.done });
+        return acc;
+      }, {});
+      setWeeklyWorkouts(grouped);
+    }
+  };
+
+  // ---------- Prüfe Session beim Mount ----------
   useEffect(() => {
-    const fetchData = async () => {
+    const checkSession = async () => {
       const {
-        data: { user },
-        error,
-      } = await supabase.auth.getUser();
+        data: { session },
+      } = await supabase.auth.getSession();
 
-      if (!user || error) return;
-
-      const { data: weightData } = await supabase
-        .from("weights")
-        .select("*")
-        .eq("user_id", user.id)
-        .single();
-
-      if (weightData) {
-        setStartWeight(weightData.start);
-        setCurrentWeight(weightData.current);
-        setGoalWeight(weightData.goal);
-      }
-
-      const { data: workoutsData } = await supabase
-        .from("workouts")
-        .select("day, text, done")
-        .eq("user_id", user.id);
-
-      if (workoutsData) {
-        const grouped = workoutsData.reduce((acc, item) => {
-          acc[item.day] = acc[item.day] || [];
-          acc[item.day].push({ text: item.text, done: item.done });
-          return acc;
-        }, {});
-        setWeeklyWorkouts(grouped);
+      if (!session) {
+        navigate("/login");
+      } else {
+        fetchData();
       }
     };
 
-    fetchData();
-  }, []);
+    checkSession();
+  }, [navigate]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -104,38 +120,41 @@ export default function Dashboard() {
   };
 
   const handleDeleteWorkout = async (idx) => {
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
 
-  const workout = weeklyWorkouts[currentDay][idx];
+    const workout = weeklyWorkouts[currentDay][idx];
 
-  await supabase
-    .from("workouts")
-    .delete()
-    .match({
-      user_id: user.id,
-      day: currentDay,
-      text: workout.text,
+    await supabase
+      .from("workouts")
+      .delete()
+      .match({
+        user_id: user.id,
+        day: currentDay,
+        text: workout.text,
+      });
+
+    const updatedDay = [...weeklyWorkouts[currentDay]];
+    updatedDay.splice(idx, 1);
+    setWeeklyWorkouts({
+      ...weeklyWorkouts,
+      [currentDay]: updatedDay,
     });
-
-  // Lokalen Zustand aktualisieren
-  const updatedDay = [...weeklyWorkouts[currentDay]];
-  updatedDay.splice(idx, 1);
-  setWeeklyWorkouts({
-    ...weeklyWorkouts,
-    [currentDay]: updatedDay,
-  });
-};
-
+  };
 
   return (
     <div className="dashboard">
       <h1>Dein Dashboard</h1>
 
       <div className="top-buttons">
-        <button className="logout" onClick={handleLogout}>Logout</button>
-        <button className="edit-workout-button" onClick={() => navigate("/edit-workout")}>
+        <button className="logout" onClick={handleLogout}>
+          Logout
+        </button>
+        <button
+          className="edit-workout-button"
+          onClick={() => navigate("/edit-workout")}
+        >
           Workoutplan bearbeiten
         </button>
       </div>
@@ -152,29 +171,29 @@ export default function Dashboard() {
         </div>
 
         <div className="weight-grid">
-          {['start', 'current', 'goal'].map((key) => (
+          {["start", "current", "goal"].map((key) => (
             <div key={key} className="weight-box">
               <label>
-                {key === 'start'
-                  ? 'Startgewicht'
-                  : key === 'current'
-                  ? 'Aktuelles Gewicht'
-                  : 'Zielgewicht'}
+                {key === "start"
+                  ? "Startgewicht"
+                  : key === "current"
+                  ? "Aktuelles Gewicht"
+                  : "Zielgewicht"}
               </label>
               {editMode ? (
                 <input
                   type="number"
                   value={
-                    key === 'start'
+                    key === "start"
                       ? startWeight
-                      : key === 'current'
+                      : key === "current"
                       ? currentWeight
                       : goalWeight
                   }
                   onChange={(e) => {
                     const val = parseFloat(e.target.value);
-                    if (key === 'start') setStartWeight(val);
-                    else if (key === 'current') setCurrentWeight(val);
+                    if (key === "start") setStartWeight(val);
+                    else if (key === "current") setCurrentWeight(val);
                     else setGoalWeight(val);
                   }}
                   required
@@ -182,9 +201,9 @@ export default function Dashboard() {
               ) : (
                 <div className="weight-display">
                   <span>
-                    {key === 'start'
+                    {key === "start"
                       ? startWeight
-                      : key === 'current'
+                      : key === "current"
                       ? currentWeight
                       : goalWeight}{" "}
                     kg
@@ -214,25 +233,34 @@ export default function Dashboard() {
       </form>
 
       <div className="workout">
-  <h2 className="workout-heading">{currentDay + "'s Workout"}</h2>
-  <ul className="workout-list">
-    {todayWorkout.map((item, idx) => (
-      <li key={idx} className="workout-item">
-        <span className={item.done ? "done" : ""}>{item.text}</span>
-        <div className="workout-actions">
-          <button onClick={() => updateWorkout(idx, "done", !item.done)}>
-            {item.done ? "✔️" : "⏳"}
-          </button>
-          <button onClick={() => updateWorkout(idx, "text", prompt("Neuer Text:", item.text) || item.text)}>
-            ✏️
-          </button>
-          <button onClick={() => handleDeleteWorkout(idx)}>🗑️</button>
-        </div>
-      </li>
-    ))}
-  </ul>
-</div>
-
+        <h2 className="workout-heading">{currentDay + "'s Workout"}</h2>
+        <ul className="workout-list">
+          {todayWorkout.map((item, idx) => (
+            <li key={idx} className="workout-item">
+              <span className={item.done ? "done" : ""}>{item.text}</span>
+              <div className="workout-actions">
+                <button
+                  onClick={() => updateWorkout(idx, "done", !item.done)}
+                >
+                  {item.done ? "✔️" : "⏳"}
+                </button>
+                <button
+                  onClick={() =>
+                    updateWorkout(
+                      idx,
+                      "text",
+                      prompt("Neuer Text:", item.text) || item.text
+                    )
+                  }
+                >
+                  ✏️
+                </button>
+                <button onClick={() => handleDeleteWorkout(idx)}>🗑️</button>
+              </div>
+            </li>
+          ))}
+        </ul>
+      </div>
 
       {message && <p className="message">{message}</p>}
     </div>
