@@ -10,36 +10,39 @@ import EditWorkoutPlan from './components/EditWorkoutPlan';
 
 export default function App() {
   const [session, setSession] = useState(null);
-  const [loading, setLoading] = useState(true); // NEU
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const initSession = async () => {
+    const getInitialSession = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       setSession(session);
       setLoading(false);
     };
 
-    initSession();
+    getInitialSession();
 
-    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
     });
 
-    return () => {
-      listener?.subscription?.unsubscribe();
-    };
+    return () => subscription.unsubscribe();
   }, []);
 
-  if (loading) return <div>Lade...</div>; // NEU: Kein Routing, bevor Session klar ist
+  if (loading) {
+    return <div style={{ color: "white", textAlign: "center", marginTop: "3rem" }}>Lade...</div>;
+  }
 
   return (
     <Router>
       <Routes>
         <Route path="/" element={<Home />} />
-        <Route path="/edit-workout" element={session ? <EditWorkoutPlan /> : <Navigate to="/login" />} />
+        <Route path="/edit-workout" element={<EditWorkoutPlan />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
-        <Route path="/dashboard" element={session ? <Dashboard /> : <Navigate to="/login" />} />
+        <Route
+          path="/dashboard"
+          element={session ? <Dashboard /> : <Navigate to="/login" />}
+        />
       </Routes>
     </Router>
   );
