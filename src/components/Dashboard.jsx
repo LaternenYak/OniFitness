@@ -56,20 +56,21 @@ export default function Dashboard() {
 
   // ---------- Prüfe Session beim Mount ----------
   useEffect(() => {
-    const checkSession = async () => {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-
+  const { data: listener } = supabase.auth.onAuthStateChange(
+    async (event, session) => {
       if (!session) {
         navigate("/login");
       } else {
         fetchData();
       }
-    };
+    }
+  );
 
-    checkSession();
-  }, [navigate]);
+  return () => {
+    listener.subscription?.unsubscribe(); // clean up
+  };
+}, [navigate]);
+
 
   const handleSubmit = async (e) => {
     e.preventDefault();
