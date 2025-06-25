@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "../supabase";
 import { useNavigate } from "react-router-dom";
 import { upload } from "@testing-library/user-event/dist/upload";
+import "./EditWorkoutPlan.css";
 
 export default function EditWorkoutPlan() {
 

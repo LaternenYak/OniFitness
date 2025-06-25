@@ -103,6 +103,32 @@ export default function Dashboard() {
     });
   };
 
+  const handleDeleteWorkout = async (idx) => {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  const workout = weeklyWorkouts[currentDay][idx];
+
+  await supabase
+    .from("workouts")
+    .delete()
+    .match({
+      user_id: user.id,
+      day: currentDay,
+      text: workout.text,
+    });
+
+  // Lokalen Zustand aktualisieren
+  const updatedDay = [...weeklyWorkouts[currentDay]];
+  updatedDay.splice(idx, 1);
+  setWeeklyWorkouts({
+    ...weeklyWorkouts,
+    [currentDay]: updatedDay,
+  });
+};
+
+
   return (
     <div className="dashboard">
       <h1>Dein Dashboard</h1>
@@ -188,24 +214,25 @@ export default function Dashboard() {
       </form>
 
       <div className="workout">
-        <h2>{currentDay}'s Workout</h2>
-        <ul>
-          {todayWorkout.map((item, idx) => (
-            <li key={idx}>
-              <input
-                type="checkbox"
-                checked={item.done}
-                onChange={(e) => updateWorkout(idx, "done", e.target.checked)}
-              />
-              <input
-                className="workout-input"
-                value={item.text}
-                onChange={(e) => updateWorkout(idx, "text", e.target.value)}
-              />
-            </li>
-          ))}
-        </ul>
-      </div>
+  <h2 className="workout-heading">{currentDay + "'s Workout"}</h2>
+  <ul className="workout-list">
+    {todayWorkout.map((item, idx) => (
+      <li key={idx} className="workout-item">
+        <span className={item.done ? "done" : ""}>{item.text}</span>
+        <div className="workout-actions">
+          <button onClick={() => updateWorkout(idx, "done", !item.done)}>
+            {item.done ? "✔️" : "⏳"}
+          </button>
+          <button onClick={() => updateWorkout(idx, "text", prompt("Neuer Text:", item.text) || item.text)}>
+            ✏️
+          </button>
+          <button onClick={() => handleDeleteWorkout(idx)}>🗑️</button>
+        </div>
+      </li>
+    ))}
+  </ul>
+</div>
+
 
       {message && <p className="message">{message}</p>}
     </div>

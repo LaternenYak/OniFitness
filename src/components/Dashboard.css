@@ -1,5 +1,3 @@
-/* Dashboard.css */
-
 /* Grundlayout */
 body {
   background: linear-gradient(135deg, #0f0f0f, #1a1a2e);
@@ -10,32 +8,21 @@ body {
 }
 
 /* Überschrift */
-h2 {
-  font-size: 2rem;
-  color: #00ffe0;
-  margin-bottom: 2rem;
-  text-shadow: 0 0 5px #00ffe0;
-}
-
-/* Gewichtsanzeige */
-.weights-container {
-  display: flex;
-  justify-content: center;
-  gap: 1rem;
-  flex-wrap: wrap;
+.dashboard h1 {
+  text-align: center;
+  font-size: 2.5rem;
   margin-bottom: 1rem;
 }
 
-
-
-.weight-boxes {
+/* Sektion für Buttons oben */
+.top-buttons {
   display: flex;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  margin-bottom: 2rem;
+  justify-content: center;
   gap: 1rem;
+  margin-bottom: 2rem;
 }
 
+/* Gewichtsanzeige */
 .weight-wrapper {
   display: flex;
   flex-direction: column;
@@ -60,20 +47,6 @@ h2 {
   box-shadow: 0 0 8px #0ff1ce44;
 }
 
-.weight-box .edit-icon {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  cursor: pointer;
-  color: #00ffe0;
-  font-size: 1.2rem;
-  transition: transform 0.2s;
-}
-
-.weight-box .edit-icon:hover {
-  transform: scale(1.2);
-}
-
 .weight-box input {
   background: transparent;
   border: none;
@@ -81,6 +54,11 @@ h2 {
   font-size: 1.2rem;
   text-align: center;
   width: 100%;
+}
+
+.weight-display {
+  font-size: 1.2rem;
+  color: #fff;
 }
 
 .weight-diff {
@@ -100,40 +78,58 @@ h2 {
   box-shadow: 0 0 6px #0ff1ce22;
 }
 
-
-/* Workout-Bereich */
-.workout-section {
-  background: #1c1c2c;
-  border: 1px solid #444;
+/* Workoutbereich */
+.workout {
+  margin-top: 3rem;
+  padding: 1rem 2rem;
+  background: rgba(255, 255, 255, 0.02);
   border-radius: 1rem;
-  padding: 1.5rem;
-  box-shadow: 0 0 15px rgba(0, 255, 224, 0.2);
 }
 
-.workout-section h3 {
-  color: #00ffe0;
-  text-shadow: 0 0 4px #00ffe0;
+.workout-heading {
+  font-size: 1.8rem;
+  color: cyan;
   margin-bottom: 1rem;
+  text-shadow: 0 0 4px #00ffe0;
+}
+
+.workout-list {
+  list-style: none;
+  padding: 0;
 }
 
 .workout-item {
   display: flex;
+  justify-content: space-between;
   align-items: center;
+  background: #1c1c1c;
   margin-bottom: 0.8rem;
+  padding: 0.6rem 1rem;
+  border-radius: 0.5rem;
 }
 
-.workout-item input[type="checkbox"] {
-  margin-right: 0.8rem;
-  transform: scale(1.2);
+.workout-item span {
+  font-size: 1rem;
+  flex: 1;
 }
 
-.workout-item input[type="text"] {
-  background: #29293d;
-  border: 1px solid #00ffe0;
-  border-radius: 5px;
-  padding: 0.5rem;
-  color: #fff;
-  width: 100%;
+.workout-item span.done {
+  text-decoration: line-through;
+  color: #888;
+}
+
+.workout-actions button {
+  margin-left: 0.5rem;
+  background: transparent;
+  border: none;
+  font-size: 1rem;
+  cursor: pointer;
+  color: cyan;
+  transition: transform 0.2s ease;
+}
+
+.workout-actions button:hover {
+  transform: scale(1.1);
 }
 
 /* Buttons */
@@ -147,6 +143,10 @@ button {
   cursor: pointer;
   transition: background 0.3s;
   box-shadow: 0 0 10px #00ffe0;
+}
+
+button:hover {
+  background-color: #00ccbb;
 }
 
 .edit-workout-button {
@@ -166,20 +166,29 @@ button {
   color: black;
 }
 
-
-button:hover {
-  background-color: #00ccbb;
+/* Speichern Button */
+.save-button {
+  margin-top: 1rem;
 }
 
 /* Nachricht */
-p {
+.message {
   margin-top: 1rem;
   color: #aaffaa;
 }
 
+/* Edit-Button für Gewicht */
+.edit-toggle-button {
+  background-color: #00ffe0;
+  color: #000;
+  border-radius: 8px;
+  padding: 0.5rem 1rem;
+  font-weight: bold;
+}
+
 /* Mobiloptimierung */
 @media (max-width: 600px) {
-  .weight-boxes {
+  .weight-grid {
     flex-direction: column;
     align-items: stretch;
   }
@@ -188,12 +197,11 @@ p {
     min-width: 100%;
   }
 
-  .workout-section {
-    padding: 1rem;
+  .top-buttons {
+    flex-direction: column;
   }
 
   button {
     width: 100%;
-    margin-top: 1rem;
   }
 }
