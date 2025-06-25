@@ -19,43 +19,45 @@ export default function Dashboard() {
   const todayWorkout = weeklyWorkouts[currentDay] || [];
 
   // ---------- Zentrale fetchData Funktion ----------
-  const fetchData = async () => {
-    const {
-      data: { user },
-      error,
-    } = await supabase.auth.getUser();
+  // ... Imports und useState ...
 
-    if (!user || error) return;
+const fetchData = async () => {
+  const {
+    data: { user },
+    error,
+  } = await supabase.auth.getUser();
 
-    const { data: weightData } = await supabase
-      .from("weights")
-      .select("*")
-      .eq("user_id", user.id)
-      .single();
+  if (!user || error) return;
 
-    if (weightData) {
-      setStartWeight(weightData.start);
-      setCurrentWeight(weightData.current);
-      setGoalWeight(weightData.goal);
-    }
+  const { data: weightData } = await supabase
+    .from("weights")
+    .select("*")
+    .eq("user_id", user.id)
+    .single();
 
-    const { data: workoutsData } = await supabase
-      .from("workouts")
-      .select("day, text, done")
-      .eq("user_id", user.id);
+  if (weightData) {
+    setStartWeight(weightData.start);
+    setCurrentWeight(weightData.current);
+    setGoalWeight(weightData.goal);
+  }
 
-    if (workoutsData) {
-      const grouped = workoutsData.reduce((acc, item) => {
-        acc[item.day] = acc[item.day] || [];
-        acc[item.day].push({ text: item.text, done: item.done });
-        return acc;
-      }, {});
-      setWeeklyWorkouts(grouped);
-    }
-  };
+  const { data: workoutsData } = await supabase
+    .from("workouts")
+    .select("day, text, done")
+    .eq("user_id", user.id);
 
-  // ---------- Prüfe Session beim Mount ----------
-  useEffect(() => {
+  if (workoutsData) {
+    const grouped = workoutsData.reduce((acc, item) => {
+      acc[item.day] = acc[item.day] || [];
+      acc[item.day].push({ text: item.text, done: item.done });
+      return acc;
+    }, {});
+    setWeeklyWorkouts(grouped);
+  }
+};
+
+// 👇 Jetzt HIER den Session-Listener einsetzen
+useEffect(() => {
   const { data: listener } = supabase.auth.onAuthStateChange(
     async (event, session) => {
       if (!session) {
@@ -67,9 +69,10 @@ export default function Dashboard() {
   );
 
   return () => {
-    listener.subscription?.unsubscribe(); // clean up
+    listener.subscription?.unsubscribe();
   };
 }, [navigate]);
+
 
 
   const handleSubmit = async (e) => {
