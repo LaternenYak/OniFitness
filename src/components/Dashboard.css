@@ -149,6 +149,24 @@ button {
   box-shadow: 0 0 10px #00ffe0;
 }
 
+.edit-workout-button {
+  background: transparent;
+  border: 2px solid cyan;
+  color: cyan;
+  font-weight: bold;
+  padding: 10px 20px;
+  border-radius: 10px;
+  margin: 10px 0;
+  cursor: pointer;
+  transition: 0.2s ease-in-out;
+}
+
+.edit-workout-button:hover {
+  background: cyan;
+  color: black;
+}
+
+
 button:hover {
   background-color: #00ccbb;
 }

@@ -10,36 +10,48 @@ export default function Dashboard() {
   const [currentWeight, setCurrentWeight] = useState(0);
   const [goalWeight, setGoalWeight] = useState(0);
   const [message, setMessage] = useState("");
-  const [editMode, setEditMode] = useState({ start: false, current: false, goal: false });
+  const [editMode, setEditMode] = useState(false);
+  const [weeklyWorkouts, setWeeklyWorkouts] = useState({});
 
-  const [workoutList, setWorkoutList] = useState([
-    { text: "3x15 Situps", done: false },
-    { text: "3x10 Kniebeugen", done: false },
-    { text: "2x30 Sekunden Plank", done: true },
-  ]);
-
-  const fetchData = async () => {
-    const {
-      data: { user },
-      error,
-    } = await supabase.auth.getUser();
-
-    if (!user || error) return;
-
-    const { data } = await supabase
-      .from("weights")
-      .select("*")
-      .eq("user_id", user.id)
-      .single();
-
-    if (data) {
-      setStartWeight(data.start);
-      setCurrentWeight(data.current);
-      setGoalWeight(data.goal);
-    }
-  };
+  const currentDay = new Date().toLocaleDateString("de-DE", { weekday: "long" });
+  const todayWorkout = weeklyWorkouts[currentDay] || [];
 
   useEffect(() => {
+    const fetchData = async () => {
+      const {
+        data: { user },
+        error,
+      } = await supabase.auth.getUser();
+
+      if (!user || error) return;
+
+      const { data: weightData } = await supabase
+        .from("weights")
+        .select("*")
+        .eq("user_id", user.id)
+        .single();
+
+      if (weightData) {
+        setStartWeight(weightData.start);
+        setCurrentWeight(weightData.current);
+        setGoalWeight(weightData.goal);
+      }
+
+      const { data: workoutsData } = await supabase
+        .from("workouts")
+        .select("day, text, done")
+        .eq("user_id", user.id);
+
+      if (workoutsData) {
+        const grouped = workoutsData.reduce((acc, item) => {
+          acc[item.day] = acc[item.day] || [];
+          acc[item.day].push({ text: item.text, done: item.done });
+          return acc;
+        }, {});
+        setWeeklyWorkouts(grouped);
+      }
+    };
+
     fetchData();
   }, []);
 
@@ -65,7 +77,7 @@ export default function Dashboard() {
       setMessage("Fehler beim Speichern: " + error.message);
     } else {
       setMessage("Gespeichert.");
-      setEditMode({ start: false, current: false, goal: false });
+      setEditMode(false);
     }
   };
 
@@ -74,75 +86,121 @@ export default function Dashboard() {
     navigate("/login");
   };
 
+  const updateWorkout = async (idx, field, value) => {
+    const updated = { ...weeklyWorkouts };
+    updated[currentDay][idx][field] = value;
+    setWeeklyWorkouts(updated);
+
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    const workout = updated[currentDay][idx];
+    await supabase.from("workouts").update(workout).match({
+      user_id: user.id,
+      day: currentDay,
+      text: workout.text,
+    });
+  };
+
   return (
     <div className="dashboard">
       <h1>Dein Dashboard</h1>
-      <button className="logout" onClick={handleLogout}>Logout</button>
+
+      <div className="top-buttons">
+        <button className="logout" onClick={handleLogout}>Logout</button>
+        <button className="edit-workout-button" onClick={() => navigate("/edit-workout")}>
+          Workoutplan bearbeiten
+        </button>
+      </div>
 
       <form onSubmit={handleSubmit} className="weight-wrapper">
-  <div className="weight-grid">
-    {/* Gewichtsfelder */}
-    {['start', 'current', 'goal'].map((key) => (
-      <div key={key} className="weight-box">
-        <label>{key === 'start' ? 'Startgewicht' : key === 'current' ? 'Aktuelles Gewicht' : 'Zielgewicht'}</label>
-        {editMode[key] ? (
-          <input
-            type="number"
-            value={key === 'start' ? startWeight : key === 'current' ? currentWeight : goalWeight}
-            onChange={(e) => {
-              const val = parseFloat(e.target.value);
-              key === 'start' ? setStartWeight(val) : key === 'current' ? setCurrentWeight(val) : setGoalWeight(val);
-            }}
-            required
-          />
-        ) : (
-          <div className="weight-display">
-            <span>{key === 'start' ? startWeight : key === 'current' ? currentWeight : goalWeight} kg</span>
-            <span className="edit-icon" onClick={() => setEditMode({ ...editMode, [key]: true })}>✏️</span>
+        <div className="edit-toggle">
+          <button
+            type="button"
+            onClick={() => setEditMode(!editMode)}
+            className="edit-toggle-button"
+          >
+            {editMode ? "Bearbeiten beenden" : "Bearbeiten"}
+          </button>
+        </div>
+
+        <div className="weight-grid">
+          {['start', 'current', 'goal'].map((key) => (
+            <div key={key} className="weight-box">
+              <label>
+                {key === 'start'
+                  ? 'Startgewicht'
+                  : key === 'current'
+                  ? 'Aktuelles Gewicht'
+                  : 'Zielgewicht'}
+              </label>
+              {editMode ? (
+                <input
+                  type="number"
+                  value={
+                    key === 'start'
+                      ? startWeight
+                      : key === 'current'
+                      ? currentWeight
+                      : goalWeight
+                  }
+                  onChange={(e) => {
+                    const val = parseFloat(e.target.value);
+                    if (key === 'start') setStartWeight(val);
+                    else if (key === 'current') setCurrentWeight(val);
+                    else setGoalWeight(val);
+                  }}
+                  required
+                />
+              ) : (
+                <div className="weight-display">
+                  <span>
+                    {key === 'start'
+                      ? startWeight
+                      : key === 'current'
+                      ? currentWeight
+                      : goalWeight}{" "}
+                    kg
+                  </span>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+
+        <div className="weight-diff">
+          <div className="diff-box">
+            <label>Bisher abgenommen:</label>
+            <span>{(startWeight - currentWeight).toFixed(1)} kg</span>
           </div>
+          <div className="diff-box">
+            <label>Noch abzunehmen:</label>
+            <span>{(currentWeight - goalWeight).toFixed(1)} kg</span>
+          </div>
+        </div>
+
+        {editMode && (
+          <button className="save-button" type="submit">
+            Speichern
+          </button>
         )}
-      </div>
-    ))}
-  </div>
-
-  <div className="weight-diff">
-    <div className="diff-box">
-      <label>Bisher abgenommen:</label>
-      <span>{(startWeight - currentWeight).toFixed(1)} kg</span>
-    </div>
-    <div className="diff-box">
-      <label>Noch abzunehmen:</label>
-      <span>{(currentWeight - goalWeight).toFixed(1)} kg</span>
-    </div>
-  </div>
-
-  <button className="save-button" type="submit">Speichern</button>
-</form>
-
-
+      </form>
 
       <div className="workout">
-        <h2>{new Date().toLocaleDateString('de-DE', { weekday: 'long' })}'s Workout</h2>
+        <h2>{currentDay}'s Workout</h2>
         <ul>
-          {workoutList.map((item, idx) => (
+          {todayWorkout.map((item, idx) => (
             <li key={idx}>
               <input
                 type="checkbox"
                 checked={item.done}
-                onChange={() => {
-                  const copy = [...workoutList];
-                  copy[idx].done = !copy[idx].done;
-                  setWorkoutList(copy);
-                }}
+                onChange={(e) => updateWorkout(idx, "done", e.target.checked)}
               />
               <input
                 className="workout-input"
                 value={item.text}
-                onChange={(e) => {
-                  const copy = [...workoutList];
-                  copy[idx].text = e.target.value;
-                  setWorkoutList(copy);
-                }}
+                onChange={(e) => updateWorkout(idx, "text", e.target.value)}
               />
             </li>
           ))}
